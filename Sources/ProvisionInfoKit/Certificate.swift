@@ -1,5 +1,5 @@
 import Foundation
-import Security
+public import Security
 
 /// `Certificate` represents the information parsed from the certificate information
 /// embedded in a provisioning profile in the `DeveloperCertificates` field (available
@@ -19,11 +19,8 @@ public struct Certificate: Codable, Sendable {
 }
 
 extension Certificate {
-    /// Initialize a `Certificate` with the data of a `DeveloperCertificates` array entry.
-    public init(data: Data) throws(ProvisionInfoError) {
-        guard let cert = SecCertificateCreateWithData(nil, data as CFData) else {
-            throw ProvisionInfoError.certificateReadFailure
-        }
+    /// Initialize a `Certificate` with a `SecCertificate`.
+    public init(certificate cert: SecCertificate) throws(ProvisionInfoError) {
         guard let summary = SecCertificateCopySubjectSummary(cert).map({ $0 as String }) else {
             throw ProvisionInfoError.summaryReadFailure
         }
@@ -74,6 +71,14 @@ extension Certificate {
             summary: summary,
             x509Serial: serial
         )
+    }
+
+    /// Initialize a `Certificate` with the data of a `DeveloperCertificates` array entry.
+    public init(data: Data) throws(ProvisionInfoError) {
+        guard let cert = SecCertificateCreateWithData(nil, data as CFData) else {
+            throw ProvisionInfoError.certificateReadFailure
+        }
+        try self.init(certificate: cert)
     }
 }
 
